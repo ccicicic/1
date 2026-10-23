@@ -176,14 +176,14 @@
         <div class="control">
           <div class="label-row">
             <label for="cellSize">Grid size · Kích thước ô</label>
-            <output class="value-pill" id="cellSizeValue" for="cellSize">48 px</output>
+            <output class="value-pill" id="cellSizeValue" for="cellSize">100 px</output>
           </div>
-          <input id="cellSize" type="range" min="8" max="200" step="2" value="48" />
-          <div class="range-ends"><span>Ô nhỏ</span><span>Ô lớn</span></div>
+          <input id="cellSize" type="range" min="50" max="500" step="1" value="100" />
+          <div class="range-ends"><span>50 px</span><span>500 px</span></div>
           <div class="preset-row" aria-label="Kích thước ô nhanh">
-            <button class="preset" type="button" data-size="24">Nhỏ</button>
-            <button class="preset active" type="button" data-size="48">Vừa</button>
-            <button class="preset" type="button" data-size="96">Lớn</button>
+            <button class="preset" type="button" data-size="50">Nhỏ</button>
+            <button class="preset active" type="button" data-size="100">Vừa</button>
+            <button class="preset" type="button" data-size="500">Lớn</button>
           </div>
         </div>
 
@@ -192,8 +192,8 @@
             <label for="lineWidth">Grid · Độ dày đường kẻ</label>
             <output class="value-pill" id="lineWidthValue" for="lineWidth">2 px</output>
           </div>
-          <input id="lineWidth" type="range" min="1" max="12" step="1" value="2" />
-          <div class="range-ends"><span>Mỏng</span><span>Dày</span></div>
+          <input id="lineWidth" type="range" min="1" max="10" step="1" value="2" />
+          <div class="range-ends"><span>1 px</span><span>10 px</span></div>
         </div>
 
         <div class="control full-row">
@@ -449,7 +449,7 @@
         render();
       }));
       resetSettings.addEventListener('click', () => {
-        cellSize.value = '48';
+        cellSize.value = '100';
         lineWidth.value = '2';
         lineColor.value = '#111827';
         showGrid.checked = true;
