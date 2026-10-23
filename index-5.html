@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#10131b" />
+  <meta name="description" content="Tải ảnh lên, tùy chỉnh lưới ô vuông và xuất ảnh PNG độ phân giải gốc." />
+  <title>Grid Studio — Tạo lưới trên ảnh</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10131b;
+      --panel: #191e29;
+      --panel-2: #202736;
+      --line: #30394a;
+      --text: #f4f7fb;
+      --muted: #a4afc0;
+      --accent: #7dd3fc;
+      --accent-strong: #38bdf8;
+      --good: #8fe4c0;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 15% 0%, #1b2a3a 0%, var(--bg) 43%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, .dropzone:focus-visible {
+      outline: 3px solid #7dd3fc; outline-offset: 3px;
+    }
+    .app { max-width: 1500px; margin: 0 auto; padding: 26px clamp(14px, 3vw, 42px) 36px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
+    .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+    .brand-mark {
+      width: 44px; height: 44px; flex: 0 0 auto; border-radius: 13px;
+      display: grid; place-items: center; background: linear-gradient(140deg, #8be0fb, #4297e8);
+      box-shadow: 0 8px 30px #38bdf82b;
+    }
+    .brand-mark svg { width: 27px; height: 27px; stroke: #10202d; }
+    h1 { font-size: clamp(21px, 3vw, 29px); letter-spacing: -0.04em; margin: 0; }
+    .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .header-tag { color: #b9d9e8; border: 1px solid #365268; background: #172735a6; border-radius: 999px; padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+    .workspace { display: grid; grid-template-columns: minmax(270px, 335px) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .panel { background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 16px 45px #00000016; }
+    .controls { padding: 22px; }
+    .section-heading { display: flex; align-items: center; gap: 9px; margin-bottom: 17px; font-size: 15px; font-weight: 700; letter-spacing: -0.015em; }
+    .section-heading .num { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 8px; color: #8eddfa; background: #1c3b50; font-size: 12px; }
+    .upload-button, .download-button, .secondary-button {
+      border: 0; border-radius: 12px; padding: 12px 15px; font-weight: 700; transition: transform .15s ease, background .15s ease, opacity .15s ease;
+    }
+    .upload-button:hover, .download-button:hover, .secondary-button:hover { transform: translateY(-1px); }
+    .upload-button { width: 100%; display: flex; justify-content: center; align-items: center; gap: 9px; color: #082132; background: var(--accent); }
+    .upload-button:hover { background: #a5e7fc; }
+    .upload-button svg, .download-button svg, .secondary-button svg { width: 18px; height: 18px; }
+    .format-note { margin: 10px 0 0; font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .divider { height: 1px; background: var(--line); margin: 23px 0; }
+    .control { margin: 0 0 22px; }
+    .control:last-child { margin-bottom: 0; }
+    .label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .label-row label, .label-title { font-size: 13px; font-weight: 650; }
+    .value-pill { font-size: 12px; font-variant-numeric: tabular-nums; color: #bfeafa; background: #22394a; border: 1px solid #345366; border-radius: 8px; padding: 5px 8px; white-space: nowrap; }
+    input[type="range"] { display: block; width: 100%; accent-color: var(--accent-strong); cursor: pointer; }
+    .range-ends { display: flex; justify-content: space-between; color: #8290a4; font-size: 11px; margin-top: 5px; }
+    .preset-row { display: flex; gap: 7px; margin-top: 12px; }
+    .preset { flex: 1; border-radius: 9px; padding: 8px 5px; color: #c8d4e2; background: var(--panel-2); border: 1px solid #374254; font-size: 12px; }
+    .preset:hover, .preset.active { color: #d6f4ff; border-color: #579fbd; background: #203b4a; }
+    .color-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .color-label { font-size: 13px; font-weight: 650; }
+    .color-control { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--muted); }
+    input[type="color"] { width: 38px; height: 32px; padding: 3px; border-radius: 9px; border: 1px solid #475367; background: var(--panel-2); cursor: pointer; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+    .toggle-copy { font-size: 13px; font-weight: 650; }
+    .toggle-hint { font-weight: 400; color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .switch { position: relative; display: inline-flex; flex: 0 0 auto; }
+    .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .switch-track { width: 43px; height: 25px; background: #465064; border-radius: 99px; transition: background .18s; }
+    .switch-track::after { content: ""; position: absolute; width: 19px; height: 19px; top: 3px; left: 3px; border-radius: 50%; background: white; transition: transform .18s; }
+    .switch input:checked + .switch-track { background: #258bbb; }
+    .switch input:checked + .switch-track::after { transform: translateX(18px); }
+    .switch input:focus-visible + .switch-track { outline: 3px solid #7dd3fc; outline-offset: 3px; }
+    .preview-panel { min-width: 0; overflow: hidden; }
+    .preview-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding: 17px 20px; border-bottom: 1px solid var(--line); }
+    .preview-title { font-size: 14px; font-weight: 700; }
+    .preview-status { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .image-meta { display: flex; flex-wrap: wrap; gap: 7px; }
+    .meta-chip { padding: 6px 9px; font-size: 11px; color: #c4cfdd; background: #222a38; border: 1px solid #364051; border-radius: 8px; }
+    .preview-stage {
+      min-height: 520px; height: min(69vh, 790px); padding: 22px; display: grid; place-items: center; position: relative; overflow: hidden;
+      background-color: #141923;
+      background-image: radial-gradient(#2b3442 0.8px, transparent 0.8px);
+      background-size: 16px 16px;
+    }
+    .preview-stage.empty { background-image: none; }
+    #previewCanvas { display: none; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; image-rendering: auto; box-shadow: 0 15px 50px #00000060; }
+    .empty-state { text-align: center; width: min(100%, 390px); padding: 26px 15px; }
+    .empty-icon { margin: 0 auto 18px; width: 76px; height: 76px; display: grid; place-items: center; border: 1px solid #384354; background: #1d2532; color: #86d9f4; border-radius: 23px; }
+    .empty-icon svg { width: 35px; height: 35px; }
+    .empty-state h2 { font-size: 19px; letter-spacing: -0.03em; margin: 0 0 8px; }
+    .empty-state p { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 0 0 20px; }
+    .dropzone { display: block; border: 1px dashed #52677d; border-radius: 14px; padding: 17px; background: #1b2532a8; color: #b8c8d9; font-size: 12px; }
+    .dropzone.dragover { border-color: var(--accent); background: #1f3a4a; }
+    .dropzone strong { display: block; color: #e7f3fb; font-size: 13px; margin-bottom: 4px; }
+    .preview-bottom { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 17px 20px; border-top: 1px solid var(--line); }
+    .tip { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 11px; line-height: 1.5; max-width: 440px; }
+    .tip svg { width: 16px; height: 16px; flex: 0 0 auto; color: #7dd3fc; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .download-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; color: #072417; background: var(--good); white-space: nowrap; }
+    .download-button:hover { background: #b3f3d8; }
+    .download-button:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .secondary-button { display: inline-flex; align-items: center; gap: 7px; color: #d1d9e4; background: #293242; border: 1px solid #3c4759; white-space: nowrap; }
+    .secondary-button:disabled { opacity: .4; cursor: not-allowed; }
+    .footer-note { margin-top: 16px; text-align: center; color: #77869a; font-size: 11px; }
+    .toast { position: fixed; z-index: 5; bottom: 22px; left: 50%; transform: translate(-50%, 15px); opacity: 0; pointer-events: none; padding: 11px 16px; color: #eef8ff; background: #283645; border: 1px solid #4f7086; border-radius: 12px; box-shadow: 0 12px 35px #0005; font-size: 13px; transition: opacity .2s, transform .2s; max-width: calc(100vw - 30px); text-align: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    #fileInput { display: none; }
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: 1fr; }
+      .controls { order: 2; }
+      .preview-panel { order: 1; }
+      .preview-stage { min-height: 340px; height: min(58vh, 640px); }
+      .controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; }
+      .controls > .section-heading, .controls > .upload-section, .controls > .divider, .controls > .full-row { grid-column: 1 / -1; }
+      .controls > .divider { margin: 21px 0; }
+    }
+    @media (max-width: 560px) {
+      .app { padding-top: 17px; }
+      header { align-items: flex-start; margin-bottom: 17px; }
+      .header-tag { display: none; }
+      .subtitle { max-width: 260px; line-height: 1.45; }
+      .controls { display: block; padding: 18px; }
+      .preview-top, .preview-bottom { padding: 15px; }
+      .preview-stage { min-height: 300px; height: 48vh; padding: 12px; }
+      .preview-bottom { align-items: stretch; flex-direction: column; }
+      .actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .download-button, .secondary-button { padding: 11px 8px; font-size: 12px; }
+      .image-meta { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+        </div>
+        <div>
+          <h1>Grid Studio</h1>
+          <div class="subtitle">Tạo lưới ô vuông trên ảnh, theo cách bạn muốn.</div>
+        </div>
+      </div>
+      <div class="header-tag">✦ Miễn phí · Xử lý ngay trên thiết bị</div>
+    </header>
+
+    <main class="workspace">
+      <aside class="panel controls" aria-label="Cài đặt lưới">
+        <div class="section-heading"><span class="num">01</span> Ảnh của bạn</div>
+        <section class="upload-section">
+          <button class="upload-button" id="chooseImage" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-4 4 4-4 4 4"/><path d="M20 16.5v2A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4 18.5v-2"/></svg>
+            Chọn ảnh / Upload ảnh
+          </button>
+          <input id="fileInput" type="file" accept="image/*" />
+          <p class="format-note">Hỗ trợ PNG, JPG, WEBP và các định dạng ảnh trình duyệt đọc được. Ảnh không cần tải lên máy chủ.</p>
+        </section>
+
+        <div class="divider"></div>
+        <div class="section-heading"><span class="num">02</span> Tùy chỉnh lưới</div>
+
+        <div class="control">
+          <div class="label-row">
+            <label for="cellSize">Grid size · Kích thước ô</label>
+            <output class="value-pill" id="cellSizeValue" for="cellSize">48 px</output>
+          </div>
+          <input id="cellSize" type="range" min="8" max="200" step="2" value="48" />
+          <div class="range-ends"><span>Ô nhỏ</span><span>Ô lớn</span></div>
+          <div class="preset-row" aria-label="Kích thước ô nhanh">
+            <button class="preset" type="button" data-size="24">Nhỏ</button>
+            <button class="preset active" type="button" data-size="48">Vừa</button>
+            <button class="preset" type="button" data-size="96">Lớn</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="label-row">
+            <label for="lineWidth">Grid · Độ dày đường kẻ</label>
+            <output class="value-pill" id="lineWidthValue" for="lineWidth">2 px</output>
+          </div>
+          <input id="lineWidth" type="range" min="1" max="12" step="1" value="2" />
+          <div class="range-ends"><span>Mỏng</span><span>Dày</span></div>
+        </div>
+
+        <div class="control full-row">
+          <div class="color-row">
+            <label class="color-label" for="lineColor">Màu đường kẻ</label>
+            <div class="color-control"><span id="colorHex">#111827</span><input id="lineColor" type="color" value="#111827" aria-label="Chọn màu đường kẻ" /></div>
+          </div>
+        </div>
+
+        <div class="toggle-row full-row">
+          <div>
+            <div class="toggle-copy">Hiển thị lưới</div>
+            <div class="toggle-hint">Tắt để so sánh với ảnh gốc</div>
+          </div>
+          <label class="switch" aria-label="Bật hoặc tắt lưới">
+            <input type="checkbox" id="showGrid" checked />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+        <div class="divider"></div>
+        <button class="secondary-button full-row" id="resetSettings" type="button" style="width:100%; justify-content:center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11a9 9 0 1 1 2.7 6.4"/><path d="M3 4v7h7"/></svg>
+          Đặt lại cài đặt lưới
+        </button>
+      </aside>
+
+      <section class="panel preview-panel" aria-label="Xem trước ảnh">
+        <div class="preview-top">
+          <div>
+            <div class="preview-title">Xem trước</div>
+            <div class="preview-status" id="previewStatus">Chọn ảnh để bắt đầu chỉnh lưới</div>
+          </div>
+          <div class="image-meta" id="imageMeta" hidden>
+            <span class="meta-chip" id="dimensionChip">—</span>
+            <span class="meta-chip" id="gridCountChip">— ô</span>
+          </div>
+        </div>
+        <div class="preview-stage empty" id="previewStage">
+          <canvas id="previewCanvas" aria-label="Ảnh xem trước có lưới"></canvas>
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            </div>
+            <h2>Ảnh của bạn sẽ xuất hiện ở đây</h2>
+            <p>Chọn một ảnh từ thiết bị hoặc kéo thả ảnh vào khu vực này. Điều chỉnh kích thước ô và độ dày đường kẻ theo ý thích.</p>
+            <label class="dropzone" id="dropzone" for="fileInput" tabindex="0">
+              <strong>Thả ảnh vào đây</strong>
+              hoặc nhấn để duyệt tệp trên thiết bị
+            </label>
+          </div>
+        </div>
+        <div class="preview-bottom">
+          <div class="tip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
+            <span>Ảnh tải xuống được xuất ở kích thước pixel gốc. Kích thước ô và độ dày đường kẻ tính theo pixel của ảnh xuất.</span>
+          </div>
+          <div class="actions">
+            <button class="secondary-button" id="downloadOriginal" type="button" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 17v3h14v-3"/></svg>
+              Ảnh gốc
+            </button>
+            <button class="download-button" id="downloadImage" type="button" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 17v3h14v-3"/></svg>
+              Tải ảnh có lưới
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div class="footer-note">Grid Studio · Hoạt động ngay trong trình duyệt, ảnh của bạn không được gửi đi đâu.</div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const fileInput = document.getElementById('fileInput');
+      const chooseImage = document.getElementById('chooseImage');
+      const cellSize = document.getElementById('cellSize');
+      const lineWidth = document.getElementById('lineWidth');
+      const lineColor = document.getElementById('lineColor');
+      const showGrid = document.getElementById('showGrid');
+      const canvas = document.getElementById('previewCanvas');
+      const ctx = canvas.getContext('2d', { alpha: true });
+      const stage = document.getElementById('previewStage');
+      const emptyState = document.getElementById('emptyState');
+      const dropzone = document.getElementById('dropzone');
+      const cellSizeValue = document.getElementById('cellSizeValue');
+      const lineWidthValue = document.getElementById('lineWidthValue');
+      const colorHex = document.getElementById('colorHex');
+      const previewStatus = document.getElementById('previewStatus');
+      const imageMeta = document.getElementById('imageMeta');
+      const dimensionChip = document.getElementById('dimensionChip');
+      const gridCountChip = document.getElementById('gridCountChip');
+      const downloadImage = document.getElementById('downloadImage');
+      const downloadOriginal = document.getElementById('downloadOriginal');
+      const resetSettings = document.getElementById('resetSettings');
+      const presets = [...document.querySelectorAll('[data-size]')];
+
+      let image = null;
+      let objectUrl = null;
+      let currentName = 'image';
+      let toastTimer = null;
+
+      function notify(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+      }
+
+      function updateLabels() {
+        cellSizeValue.value = `${cellSize.value} px`;
+        cellSizeValue.textContent = `${cellSize.value} px`;
+        lineWidthValue.value = `${lineWidth.value} px`;
+        lineWidthValue.textContent = `${lineWidth.value} px`;
+        colorHex.textContent = lineColor.value.toUpperCase();
+        presets.forEach(button => button.classList.toggle('active', Number(button.dataset.size) === Number(cellSize.value)));
+      }
+
+      function drawGrid(context, width, height) {
+        if (!showGrid.checked) return;
+        const spacing = Number(cellSize.value);
+        const stroke = Number(lineWidth.value);
+        context.save();
+        context.strokeStyle = lineColor.value;
+        context.lineWidth = stroke;
+        context.lineCap = 'butt';
+        context.lineJoin = 'miter';
+        context.beginPath();
+        // Center strokes on the border to keep the outer edge consistent.
+        for (let x = 0; x <= width; x += spacing) {
+          const px = Math.min(x, width);
+          context.moveTo(px, 0);
+          context.lineTo(px, height);
+        }
+        if ((width % spacing) !== 0) {
+          context.moveTo(width, 0);
+          context.lineTo(width, height);
+        }
+        for (let y = 0; y <= height; y += spacing) {
+          const py = Math.min(y, height);
+          context.moveTo(0, py);
+          context.lineTo(width, py);
+        }
+        if ((height % spacing) !== 0) {
+          context.moveTo(0, height);
+          context.lineTo(width, height);
+        }
+        context.stroke();
+        context.restore();
+      }
+
+      function render() {
+        updateLabels();
+        if (!image) return;
+        if (canvas.width !== image.naturalWidth || canvas.height !== image.naturalHeight) {
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        drawGrid(ctx, canvas.width, canvas.height);
+        const cols = Math.ceil(canvas.width / Number(cellSize.value));
+        const rows = Math.ceil(canvas.height / Number(cellSize.value));
+        dimensionChip.textContent = `${canvas.width.toLocaleString('vi-VN')} × ${canvas.height.toLocaleString('vi-VN')} px`;
+        gridCountChip.textContent = `${cols} × ${rows} ô`;
+        previewStatus.textContent = `${currentName} · Lưới cập nhật trực tiếp`;
+      }
+
+      function loadFile(file) {
+        if (!file) return;
+        if (!file.type || !file.type.startsWith('image/')) {
+          notify('Tệp này không phải ảnh được hỗ trợ. Hãy chọn tệp hình ảnh.');
+          return;
+        }
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        objectUrl = URL.createObjectURL(file);
+        const nextImage = new Image();
+        nextImage.onload = () => {
+          image = nextImage;
+          currentName = file.name.replace(/\.[^.]+$/, '') || 'image';
+          canvas.style.display = 'block';
+          emptyState.style.display = 'none';
+          stage.classList.remove('empty');
+          imageMeta.hidden = false;
+          downloadImage.disabled = false;
+          downloadOriginal.disabled = false;
+          render();
+          notify('Đã tải ảnh lên. Bạn có thể chỉnh lưới ngay!');
+        };
+        nextImage.onerror = () => {
+          notify('Không thể mở ảnh này. Hãy thử tệp PNG, JPG hoặc WEBP khác.');
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        };
+        nextImage.src = objectUrl;
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+      }
+
+      function exportGrid() {
+        if (!image) return;
+        render();
+        downloadImage.disabled = true;
+        downloadImage.textContent = 'Đang xuất…';
+        canvas.toBlob(blob => {
+          downloadImage.disabled = false;
+          downloadImage.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 17v3h14v-3"/></svg> Tải ảnh có lưới';
+          if (!blob) {
+            notify('Không thể xuất ảnh này. Có thể ảnh quá lớn đối với trình duyệt.');
+            return;
+          }
+          downloadBlob(blob, `${currentName}-grid.png`);
+          notify('Đã xuất PNG ở độ phân giải gốc.');
+        }, 'image/png');
+      }
+
+      function exportOriginal() {
+        if (!image) return;
+        const originalCanvas = document.createElement('canvas');
+        originalCanvas.width = image.naturalWidth;
+        originalCanvas.height = image.naturalHeight;
+        const originalContext = originalCanvas.getContext('2d');
+        originalContext.drawImage(image, 0, 0);
+        originalCanvas.toBlob(blob => {
+          if (!blob) { notify('Không thể xuất ảnh gốc này.'); return; }
+          downloadBlob(blob, `${currentName}-original.png`);
+          notify('Đã tải ảnh gốc dưới dạng PNG.');
+        }, 'image/png');
+      }
+
+      chooseImage.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', event => {
+        loadFile(event.target.files && event.target.files[0]);
+        fileInput.value = '';
+      });
+      [cellSize, lineWidth, lineColor, showGrid].forEach(control => {
+        control.addEventListener('input', render);
+        control.addEventListener('change', render);
+      });
+      presets.forEach(button => button.addEventListener('click', () => {
+        cellSize.value = button.dataset.size;
+        render();
+      }));
+      resetSettings.addEventListener('click', () => {
+        cellSize.value = '48';
+        lineWidth.value = '2';
+        lineColor.value = '#111827';
+        showGrid.checked = true;
+        render();
+        notify('Đã đặt lại cài đặt lưới.');
+      });
+      downloadImage.addEventListener('click', exportGrid);
+      downloadOriginal.addEventListener('click', exportOriginal);
+
+      ['dragenter', 'dragover'].forEach(type => stage.addEventListener(type, event => {
+        event.preventDefault();
+        dropzone.classList.add('dragover');
+      }));
+      ['dragleave', 'dragend'].forEach(type => stage.addEventListener(type, () => dropzone.classList.remove('dragover')));
+      stage.addEventListener('drop', event => {
+        event.preventDefault();
+        dropzone.classList.remove('dragover');
+        const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+        if (file) loadFile(file);
+      });
+      dropzone.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          fileInput.click();
+        }
+      });
+      window.addEventListener('beforeunload', () => { if (objectUrl) URL.revokeObjectURL(objectUrl); });
+      updateLabels();
+    })();
+  </script>
+</body>
+</html>
